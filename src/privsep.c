@@ -117,6 +117,17 @@ ps_init(struct dhcpcd_ctx *ctx)
 		return -1;
 	}
 
+    /* Make sure that it is properly owned by our privdrop user*/
+    if (st.st_uid != pw->pw_uid || st.st_gid != pw->pw_gid) {
+        if (chown(pw->pw_dir, pw->pw_uid, pw->pw_gid) == -1) {
+            ctx->options &= ~DHCPCD_PRIVSEP;
+            logerrx("refusing chroot: %s: %s",
+                    PRIVSEP_USER, pw->pw_dir);
+            errno = 0;
+            return -1;
+        }
+    }
+
 	ctx->options |= DHCPCD_PRIVSEP;
 	return 0;
 }

@@ -258,6 +258,15 @@ make_env(struct dhcpcd_ctx *ctx, const struct interface *ifp,
 #else
 	char tmpfile[] = "/tmp/dhcpcd-script-env-XXXXXX";
 	int tmpfd;
+    struct stat st;
+
+    /* dhcpcd home dir chroot might not have a /tmp and mkstemp doesn't create it */
+    if (stat("/tmp", &st) == -1 && errno == ENOENT) {
+        if (mkdir("/tmp", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) == -1) {
+            logerr("%s: mkdir", __func__);
+            return -1;
+        }
+    }
 
 	fp = NULL;
 	tmpfd = mkstemp(tmpfile);
